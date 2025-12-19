@@ -85,12 +85,19 @@
 
         <!-- Services section -->
         <section class="services-section">
-          <h2 class="section-title">Services</h2>
+          <div class="section-header">
+            <h2 class="section-title">Services</h2>
+            <button @click="refreshStatus" :disabled="refreshingStatus" class="btn btn-ghost btn-sm">
+              <span v-if="refreshingStatus" class="spinner"></span>
+              🔄 Refresh Status
+            </button>
+          </div>
           <div class="services-grid grid grid-cols-2">
             <ServiceDetails
               v-for="service in fileData.details.services"
               :key="service.name"
               :service="service"
+              :status="getServiceStatus(service.name)"
               class="fade-in"
             />
           </div>
@@ -140,6 +147,7 @@ import ServiceDetails from '../components/ServiceDetails.vue'
 const route = useRoute()
 
 const fileData = ref(null)
+const statusData = ref(null)
 const loading = ref(false)
 const error = ref('')
 const showRaw = ref(false)
@@ -147,6 +155,7 @@ const showRaw = ref(false)
 const executing = ref(false)
 const executingCommand = ref(null)
 const commandResult = ref(null)
+const refreshingStatus = ref(false)
 
 const fetchDetails = async () => {
   loading.value = true
@@ -155,6 +164,7 @@ const fetchDetails = async () => {
   try {
     const response = await composeApi.getFileDetails(route.params.id)
     fileData.value = response.data
+    statusData.value = response.data.status || null
   } catch (err) {
     error.value = err.response?.data?.error || 'Failed to load file details'
   } finally {
@@ -170,6 +180,8 @@ const executeCommand = async (command) => {
   try {
     const response = await composeApi.executeCommand(route.params.id, command)
     commandResult.value = response.data.result
+    // Refresh status after command execution
+    await refreshStatus()
   } catch (err) {
     commandResult.value = {
       success: false,
@@ -180,6 +192,23 @@ const executeCommand = async (command) => {
     executing.value = false
     executingCommand.value = null
   }
+}
+
+const refreshStatus = async () => {
+  refreshingStatus.value = true
+  try {
+    const response = await composeApi.getStatus(route.params.id)
+    statusData.value = response.data.status
+  } catch (err) {
+    console.error('Failed to refresh status:', err)
+  } finally {
+    refreshingStatus.value = false
+  }
+}
+
+const getServiceStatus = (serviceName) => {
+  if (!statusData.value?.services) return null
+  return statusData.value.services[serviceName] || null
 }
 
 onMounted(() => {

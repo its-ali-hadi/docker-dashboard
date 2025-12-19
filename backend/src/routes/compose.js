@@ -3,7 +3,8 @@ import { authenticateToken } from '../middleware/auth.js';
 import {
     scanForComposeFiles,
     parseComposeFile,
-    executeComposeCommand
+    executeComposeCommand,
+    getContainerStatus
 } from '../services/composeService.js';
 
 const router = express.Router();
@@ -64,11 +65,15 @@ router.get('/files/:id/details', async (req, res) => {
         }
 
         const file = composeFilesCache[fileId];
-        const details = await parseComposeFile(file.path);
+        const [details, status] = await Promise.all([
+            parseComposeFile(file.path),
+            getContainerStatus(file.path)
+        ]);
 
         res.json({
             file,
-            details
+            details,
+            status
         });
 
     } catch (err) {
@@ -114,6 +119,33 @@ router.post('/files/:id/command', async (req, res) => {
             error: 'Failed to execute command',
             details: err.message
         });
+    }
+});
+
+/**
+ * GET /api/compose/files/:id/status
+ * Get container status for a specific compose file
+ */
+router.get('/files/:id/status', async (req, res) => {
+    try {
+        const fileId = parseInt(req.params.id, 10);
+
+        // Find the file in cache
+        if (fileId < 0 || fileId >= composeFilesCache.length) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        const file = composeFilesCache[fileId];
+        const status = await getContainerStatus(file.path);
+
+        res.json({
+            file,
+            status
+        });
+
+    } catch (err) {
+        console.error('Error getting status:', err);
+        res.status(500).json({ error: 'Failed to get container status' });
     }
 });
 

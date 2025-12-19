@@ -221,8 +221,94 @@ export async function executeComposeCommand(filePath, command) {
     });
 }
 
+/**
+ * Get container status for services in a compose file
+ */
+export async function getContainerStatus(filePath) {
+    return new Promise((resolve) => {
+        const args = ['-f', filePath, 'ps', '--format', 'json'];
+
+        console.log(`Getting status: docker-compose ${args.join(' ')}`);
+
+        const process = spawn('docker-compose', args, {
+            cwd: path.dirname(filePath),
+            shell: true
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        process.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+
+        process.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+
+        process.on('close', (code) => {
+            if (code !== 0 || !stdout.trim()) {
+                // Return empty status if command fails or no output
+                resolve({ services: {}, summary: { running: 0, total: 0 } });
+                return;
+            }
+
+            try {
+                // Parse JSON output - each line is a JSON object
+                const lines = stdout.trim().split('\n').filter(line => line.trim());
+                const services = {};
+                let running = 0;
+
+                for (const line of lines) {
+                    try {
+                        const container = JSON.parse(line);
+                        const serviceName = container.Service || container.Name;
+                        const state = container.State || 'unknown';
+                        const status = container.Status || '';
+                        
+                        services[serviceName] = {
+                            name: serviceName,
+                            containerId: container.ID || container.Id || null,
+                            state: state.toLowerCase(),
+                            status: status,
+                            health: container.Health || null
+                        };
+
+                        if (state.toLowerCase() === 'running') {
+                            running++;
+                        }
+                    } catch (parseErr) {
+                        // Skip invalid JSON lines
+                    }
+                }
+
+                resolve({
+                    services,
+                    summary: {
+                        running,
+                        total: Object.keys(services).length
+                    }
+                });
+            } catch (err) {
+                resolve({ services: {}, summary: { running: 0, total: 0 } });
+            }
+        });
+
+        process.on('error', () => {
+            resolve({ services: {}, summary: { running: 0, total: 0 } });
+        });
+
+        // Timeout after 30 seconds
+        setTimeout(() => {
+            process.kill();
+            resolve({ services: {}, summary: { running: 0, total: 0 } });
+        }, 30 * 1000);
+    });
+}
+
 export default {
     scanForComposeFiles,
     parseComposeFile,
-    executeComposeCommand
+    executeComposeCommand,
+    getContainerStatus
 };

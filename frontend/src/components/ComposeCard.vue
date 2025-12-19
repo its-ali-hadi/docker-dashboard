@@ -4,7 +4,17 @@
       <div class="file-info">
         <span class="file-icon">📄</span>
         <div class="file-details">
-          <h3 class="file-name">{{ file.name }}</h3>
+          <div class="file-name-row">
+            <h3 class="file-name">{{ file.name }}</h3>
+            <span 
+              v-if="status" 
+              :class="['status-badge', statusClass]"
+              :title="`${status.summary.running}/${status.summary.total} containers running`"
+            >
+              <span class="status-dot"></span>
+              {{ status.summary.running }}/{{ status.summary.total }}
+            </span>
+          </div>
           <p class="file-path">{{ file.directory }}</p>
         </div>
       </div>
@@ -69,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { composeApi } from '../services/api'
 
 const props = defineProps({
@@ -82,6 +92,16 @@ const props = defineProps({
 const isExecuting = ref(false)
 const executingCommand = ref(null)
 const commandResult = ref(null)
+const status = ref(null)
+
+const statusClass = computed(() => {
+  if (!status.value) return ''
+  const { running, total } = status.value.summary
+  if (total === 0) return 'status-unknown'
+  if (running === total) return 'status-running'
+  if (running === 0) return 'status-stopped'
+  return 'status-partial'
+})
 
 const formatSize = (bytes) => {
   if (bytes < 1024) return bytes + ' B'
@@ -99,6 +119,15 @@ const formatDate = (date) => {
   })
 }
 
+const fetchStatus = async () => {
+  try {
+    const response = await composeApi.getStatus(props.file.id)
+    status.value = response.data.status
+  } catch (err) {
+    // Status fetch failed, leave as null
+  }
+}
+
 const executeCommand = async (command) => {
   isExecuting.value = true
   executingCommand.value = command
@@ -107,6 +136,8 @@ const executeCommand = async (command) => {
   try {
     const response = await composeApi.executeCommand(props.file.id, command)
     commandResult.value = response.data.result
+    // Refresh status after command
+    await fetchStatus()
   } catch (err) {
     commandResult.value = {
       success: false,
@@ -118,6 +149,10 @@ const executeCommand = async (command) => {
     executingCommand.value = null
   }
 }
+
+onMounted(() => {
+  fetchStatus()
+})
 </script>
 
 <style scoped>
@@ -144,11 +179,71 @@ const executeCommand = async (command) => {
   min-width: 0;
 }
 
+.file-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-xs);
+}
+
 .file-name {
   font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--spacing-xs);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.status-badge .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-running {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.status-running .status-dot {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.status-stopped {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+.status-stopped .status-dot {
+  background: #6b7280;
+}
+
+.status-partial {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.status-partial .status-dot {
+  background: #f59e0b;
+}
+
+.status-unknown {
+  background: rgba(107, 114, 128, 0.1);
+  color: #9ca3af;
+}
+
+.status-unknown .status-dot {
+  background: #9ca3af;
 }
 
 .file-path {

@@ -51,6 +51,11 @@ export const composeApi = {
     // Execute command on a compose file
     executeCommand(id, command) {
         return api.post(`/compose/files/${id}/command`, { command })
+    },
+
+    // Get container status
+    getStatus(id) {
+        return api.get(`/compose/files/${id}/status`)
     }
 }
 
