@@ -15,13 +15,13 @@ A full-stack web dashboard for managing Docker Compose files on your system. Bui
 ## 📸 Screenshots
 
 ### Login Page
-![Login Page](screenshots/login.png)
+![Login Page](readme-assets/login.png)
 
 ### Dashboard
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](readme-assets/dashboard.png)
 
 ### File Details
-![File Details](screenshots/details.png)
+![File Details](readme-assets/details.png)
 
 ## 🏗️ Project Structure
 
@@ -54,18 +54,22 @@ docker-dashboard/
 1. **Clone and configure**:
    ```bash
    cd docker-dashboard
-   
-   # Optional: Set environment variables
-   export JWT_SECRET=your-secret-key
-   export PROJECTS_PATH=/path/to/your/projects
    ```
-
-2. **Start the stack**:
+2. **Set environment variables**:
+   ```bash
+   cp .env.example .env
+   JWT_SECRET=docker-dashboard-secret-key-change-in-production
+   PORT=3001
+   SCAN_DIRECTORIES=C:\\Users,/home
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=admin123
+   ```
+3. **Start the stack**:
    ```bash
    docker-compose up --build
    ```
 
-3. **Access the dashboard**:
+4. **Access the dashboard**:
    - Open http://localhost:8080
    - Login with `admin` / `admin123`
 

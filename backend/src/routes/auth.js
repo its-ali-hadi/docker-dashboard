@@ -20,8 +20,8 @@ router.post('/login', async (req, res) => {
         }
 
         // Check credentials against environment variables or defaults
-        const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+        const adminUsername = process.env.ADMIN_USERNAME;
+        const adminPassword = process.env.ADMIN_PASSWORD;
 
         if (username !== adminUsername) {
             return res.status(401).json({ error: 'Invalid credentials' });
