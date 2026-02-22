@@ -59,7 +59,7 @@ docker-dashboard/
    ```bash
    cp .env.example .env
    JWT_SECRET=docker-dashboard-secret-key-change-in-production
-   PORT=3001
+   PORT=8091
    SCAN_DIRECTORIES=C:\\Users,/home
    ADMIN_USERNAME=admin
    ADMIN_PASSWORD=admin123
@@ -70,7 +70,7 @@ docker-dashboard/
    ```
 
 4. **Access the dashboard**:
-   - Open http://localhost:8080
+   - Open http://localhost:8090
    - Login with `admin` / `admin123`
 
 ### Development Mode
@@ -83,7 +83,7 @@ npm install
 npm run dev
 ```
 
-The backend runs on http://localhost:3001
+The backend runs on http://localhost:8091
 
 #### Frontend
 
@@ -140,7 +140,7 @@ await axios.post('/api/compose/files/0/command',
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | 3001 | Server port |
+| `PORT` | 8091 | Server port |
 | `JWT_SECRET` | (random) | Secret key for JWT signing |
 | `ADMIN_USERNAME` | admin | Login username |
 | `ADMIN_PASSWORD` | admin123 | Login password |
