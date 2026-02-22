@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies and Docker CLI
-RUN apk add --no-cache docker-cli sudo
+RUN apk add --no-cache docker-cli docker-cli-compose sudo
 
 # Install npm dependencies
 RUN npm install --production

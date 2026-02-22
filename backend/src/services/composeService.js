@@ -163,7 +163,7 @@ export async function executeComposeCommand(filePath, command) {
         // Add command-specific arguments
         switch (command) {
             case 'up':
-                args.push('up', '-d');
+                args.push('up', '-d', '--build');
                 break;
             case 'down':
                 args.push('down');
@@ -182,12 +182,13 @@ export async function executeComposeCommand(filePath, command) {
         }
 
         const useSudo = process.env.USE_SUDO === 'true';
-        const baseCmd = useSudo ? 'sudo' : 'docker';
-        const cmdArgs = useSudo ? ['docker', 'compose', ...args] : ['compose', ...args];
+        const fullCmd = useSudo
+            ? `sudo docker compose ${args.join(' ')}`
+            : `docker compose ${args.join(' ')}`;
 
-        console.log(`Executing: ${baseCmd} ${cmdArgs.join(' ')}`);
+        console.log(`Executing: ${fullCmd}`);
 
-        const childProcess = spawn(baseCmd, cmdArgs, {
+        const childProcess = spawn(fullCmd, {
             cwd: path.dirname(filePath),
             shell: true
         });
@@ -233,12 +234,13 @@ export async function getContainerStatus(filePath) {
         const args = ['-f', filePath, 'ps', '--format', 'json'];
 
         const useSudo = process.env.USE_SUDO === 'true';
-        const baseCmd = useSudo ? 'sudo' : 'docker';
-        const cmdArgs = useSudo ? ['docker', 'compose', ...args] : ['compose', ...args];
+        const fullCmd = useSudo
+            ? `sudo docker compose ${args.join(' ')}`
+            : `docker compose ${args.join(' ')}`;
 
-        console.log(`Getting status: ${baseCmd} ${cmdArgs.join(' ')}`);
+        console.log(`Getting status: ${fullCmd}`);
 
-        const childProcess = spawn(baseCmd, cmdArgs, {
+        const childProcess = spawn(fullCmd, {
             cwd: path.dirname(filePath),
             shell: true
         });
