@@ -8,11 +8,11 @@ import composeRoutes from './routes/compose.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8091;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:8090', 'http://frontend:80'],
+  origin: ['http://localhost:5173', 'http://localhost:8090', 'http://frontend:8090'],
   credentials: true
 }));
 app.use(express.json());
