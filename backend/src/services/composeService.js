@@ -181,9 +181,13 @@ export async function executeComposeCommand(filePath, command) {
                 return reject(new Error(`Unknown command: ${command}`));
         }
 
-        console.log(`Executing: docker-compose ${args.join(' ')}`);
+        const useSudo = process.env.USE_SUDO === 'true';
+        const baseCmd = useSudo ? 'sudo' : 'docker';
+        const cmdArgs = useSudo ? ['docker', 'compose', ...args] : ['compose', ...args];
 
-        const process = spawn('docker-compose', args, {
+        console.log(`Executing: ${baseCmd} ${cmdArgs.join(' ')}`);
+
+        const process = spawn(baseCmd, cmdArgs, {
             cwd: path.dirname(filePath),
             shell: true
         });
@@ -205,7 +209,7 @@ export async function executeComposeCommand(filePath, command) {
                 exitCode: code,
                 stdout,
                 stderr,
-                command: `docker-compose ${args.join(' ')}`
+                command: `${useSudo ? 'sudo ' : ''}docker compose ${args.join(' ')}`
             });
         });
 
@@ -228,9 +232,13 @@ export async function getContainerStatus(filePath) {
     return new Promise((resolve) => {
         const args = ['-f', filePath, 'ps', '--format', 'json'];
 
-        console.log(`Getting status: docker-compose ${args.join(' ')}`);
+        const useSudo = process.env.USE_SUDO === 'true';
+        const baseCmd = useSudo ? 'sudo' : 'docker';
+        const cmdArgs = useSudo ? ['docker', 'compose', ...args] : ['compose', ...args];
 
-        const process = spawn('docker-compose', args, {
+        console.log(`Getting status: ${baseCmd} ${cmdArgs.join(' ')}`);
+
+        const process = spawn(baseCmd, cmdArgs, {
             cwd: path.dirname(filePath),
             shell: true
         });
@@ -265,7 +273,7 @@ export async function getContainerStatus(filePath) {
                         const serviceName = container.Service || container.Name;
                         const state = container.State || 'unknown';
                         const status = container.Status || '';
-                        
+
                         services[serviceName] = {
                             name: serviceName,
                             containerId: container.ID || container.Id || null,

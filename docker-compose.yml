@@ -16,13 +16,14 @@ services:
       - JWT_SECRET=${JWT_SECRET:-docker-dashboard-secret-change-me}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
-      - SCAN_DIRECTORIES=/host/projects,/host/home
+      - SCAN_DIRECTORIES=${SCAN_DIRECTORIES:-/host/home,/host/projects}
+      - USE_SUDO=${USE_SUDO:-false}
     volumes:
       # Mount Docker socket for executing docker-compose commands
       - /var/run/docker.sock:/var/run/docker.sock
       # Mount host directories to scan for compose files
-      - ${PROJECTS_PATH:-/c/Users}:/host/home:ro
-      - ${HOME_PATH:-/e/projects}:/host/projects:ro
+      - ${PROJECTS_PATH:-/home}:/host/home:ro
+      - ${HOME_PATH:-/var/www}:/host/projects:ro
     networks:
       - docker-dashboard-network
 

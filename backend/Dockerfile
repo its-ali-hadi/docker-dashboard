@@ -5,7 +5,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies and Docker CLI
+RUN apk add --no-cache docker-cli sudo
+
+# Install npm dependencies
 RUN npm install --production
 
 # Copy source code
