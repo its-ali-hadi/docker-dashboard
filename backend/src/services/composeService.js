@@ -187,7 +187,7 @@ export async function executeComposeCommand(filePath, command) {
 
         console.log(`Executing: ${baseCmd} ${cmdArgs.join(' ')}`);
 
-        const process = spawn(baseCmd, cmdArgs, {
+        const childProcess = spawn(baseCmd, cmdArgs, {
             cwd: path.dirname(filePath),
             shell: true
         });
@@ -195,15 +195,15 @@ export async function executeComposeCommand(filePath, command) {
         let stdout = '';
         let stderr = '';
 
-        process.stdout.on('data', (data) => {
+        childProcess.stdout.on('data', (data) => {
             stdout += data.toString();
         });
 
-        process.stderr.on('data', (data) => {
+        childProcess.stderr.on('data', (data) => {
             stderr += data.toString();
         });
 
-        process.on('close', (code) => {
+        childProcess.on('close', (code) => {
             resolve({
                 success: code === 0,
                 exitCode: code,
@@ -213,13 +213,13 @@ export async function executeComposeCommand(filePath, command) {
             });
         });
 
-        process.on('error', (err) => {
+        childProcess.on('error', (err) => {
             reject(new Error(`Failed to execute command: ${err.message}`));
         });
 
         // Timeout after 5 minutes
         setTimeout(() => {
-            process.kill();
+            childProcess.kill();
             reject(new Error('Command timed out after 5 minutes'));
         }, 5 * 60 * 1000);
     });
@@ -238,7 +238,7 @@ export async function getContainerStatus(filePath) {
 
         console.log(`Getting status: ${baseCmd} ${cmdArgs.join(' ')}`);
 
-        const process = spawn(baseCmd, cmdArgs, {
+        const childProcess = spawn(baseCmd, cmdArgs, {
             cwd: path.dirname(filePath),
             shell: true
         });
@@ -246,15 +246,15 @@ export async function getContainerStatus(filePath) {
         let stdout = '';
         let stderr = '';
 
-        process.stdout.on('data', (data) => {
+        childProcess.stdout.on('data', (data) => {
             stdout += data.toString();
         });
 
-        process.stderr.on('data', (data) => {
+        childProcess.stderr.on('data', (data) => {
             stderr += data.toString();
         });
 
-        process.on('close', (code) => {
+        childProcess.on('close', (code) => {
             if (code !== 0 || !stdout.trim()) {
                 // Return empty status if command fails or no output
                 resolve({ services: {}, summary: { running: 0, total: 0 } });
@@ -302,13 +302,13 @@ export async function getContainerStatus(filePath) {
             }
         });
 
-        process.on('error', () => {
+        childProcess.on('error', () => {
             resolve({ services: {}, summary: { running: 0, total: 0 } });
         });
 
         // Timeout after 30 seconds
         setTimeout(() => {
-            process.kill();
+            childProcess.kill();
             resolve({ services: {}, summary: { running: 0, total: 0 } });
         }, 30 * 1000);
     });
